@@ -1,3 +1,7 @@
+using Pkg
+Pkg.activate(".")
+Pkg.instantiate()
+
 using Flux
 using Flux.MLUtils
 using Flux.Data
@@ -12,7 +16,7 @@ using Printf
 using ProgressBars
 include("NN_functions.jl")
 
-#helper functions
+## Helper functions
 function parse_commandline()
     s = ArgParseSettings()
 
@@ -45,10 +49,6 @@ function parse_commandline()
             help = "Loss function: msecrb or varcon"
             arg_type = String
             default = "msecrb"
-        "--num_coeffs_segment", "-s"
-            help = "Number of basis coefficients per segment"
-            arg_type = Int
-            default = nothing
         "--num_realizations", "-m"
             help = "Number of noise realizations (measurements) per fingerprint"
             arg_type = Int
@@ -61,10 +61,6 @@ function parse_commandline()
             help = "Delta for variance constrained cost"
             arg_type = Float64
             default = 1.0
-        "--version", "-v"
-            help = "isbrain or not"
-            arg_type = Int
-            default = 0
     end
 
     return parse_args(s)
@@ -260,10 +256,6 @@ Np = parsed_args["num_params"]
 γ = parsed_args["decay_rate"]
 batchsize = parsed_args["batchsize"]
 loss = parsed_args["loss_function"]
-Ns = parsed_args["num_coeffs_segment"]
-if isnothing(Ns)
-    Ns = Nc
-end
 Nr = parsed_args["num_realizations"]
 λ = parsed_args["lambda"]
 δ = parsed_args["delta"]
@@ -274,21 +266,21 @@ td_file = "td_test.mat" # for testing the pipeline
 if loss == "msecrb"
     pretrained_filename = ""
 elseif loss == "varcon"
-    pretrained_filename = "msecrb_Nc$(Nc)_$(Nl)L_Np$(Np)_epochs500_bs2048_lr1e-04_dr5e-05_RADAM_coeff1_Ns$(Ns).bson"
+    # pretrained_filename = "msecrb_Nc$(Nc)_Np$(Np)_epochs500_bs2048_lr1e-04_dr5e-05.bson"
+    pretrained_filename = "msecrb_Nc$(Nc)_Np$(Np)_epochs500_bs120_lr1e-04_dr5e-05.bson" # for testing pipeline
 end
 
 # start training
 @info loss
 flush(stderr)
 model, epoch_loss = train(td_file; epochs=epochs, Nc=Nc, Np=Np, η=η, γ=γ, batchsize=batchsize, loss=loss,
-    Ns=Ns, Nr=Nr, λ=λ, δ=δ, pretrained_file=pretrained_filename)
+    Nr=Nr, λ=λ, δ=δ, pretrained_file=pretrained_filename)
 
 # save model and epoch loss
 if loss == "varcon"
     # model_filename = "biasreduced_network.bson"
     model_filename = "network_test.bson" # for testing the pipeline
 elseif loss == "msecrb"
-    model_filename = string(loss, @sprintf("_Nc%g_%gL_Np%g_epochs%g_bs%g_lr%.0e_dr%.0e_", Nc, Nl, Np, epochs, batchsize, η, γ),
-        opt, "_", normalize, @sprintf("_Ns%g", Ns), ".bson")
+    model_filename = string(loss, @sprintf("_Nc%g_Np%g_epochs%g_bs%g_lr%.0e_dr%.0e.bson", Nc, Np, epochs, batchsize, η, γ))
 end
 BSON.@save model_filename model epoch_loss

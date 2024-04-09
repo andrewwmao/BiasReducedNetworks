@@ -14,7 +14,9 @@ export JULIA_BIN=/gpfs/scratch/asslaj01/julia-1.10.0/bin/julia
 set -Eeo pipefail
 
 echo $HOSTNAME
-$JULIA_BIN train.jl -c=15 -p=6 -f="msecrb" -r=1e-4 -g=5e-5 -e=500 -b=2048
-$JULIA_BIN train.jl -c=15 -p=6 -f="varcon" -r=1e-3 -e=500 -b=256 -m=200 --lambda=1 --delta=1.0
+# $JULIA_BIN train.jl -c=15 -p=6 -f="msecrb" -r=1e-4 -g=5e-5 -e=500 -b=2048
+# $JULIA_BIN train.jl -c=15 -p=6 -f="varcon" -r=1e-3 -e=500 -b=256 -m=200 --lambda=1 --delta=1.0
+$JULIA_BIN train.jl -c=15 -p=6 -f="msecrb" -r=1e-4 -g=5e-5 -e=500 -b=120 # for testing pipeline
+$JULIA_BIN train.jl -c=15 -p=6 -f="varcon" -r=1e-3 -e=500 -b=120 -m=200 --lambda=1 --delta=1.0 # for testing pipeline
 
 wait

@@ -2,16 +2,17 @@
 using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
+
 using LinearAlgebra
 using MAT
 
 ## User-Defined Parameters
 files = 1:90
 TR = 3.5e-3
-R = 15
+Ncoef = 15
 
 ## merge fingerprints into td.mat using a precomputed basis
-U = matread("basis.mat")["U"][:,1:R]
+U = matread("basis.mat")["U"][:,1:Ncoef]
 Nfiles = length(files)
 (Np, Nbatch) = size(matread("fingerprints/ijob$(files[1]).mat")["p"])
 sc   = zeros(ComplexF32, R, Nbatch, Nfiles) # compressed fingerprints

@@ -23,12 +23,12 @@ fhsig5(x) = max(5 * hardsigmoid(x), oftype(x, 1e-2))
 fhsig10(x) = max(10 * hardsigmoid(x), oftype(x, 1e-2))
 fhsig25(x) = max(25 * hardsigmoid(x), oftype(x, 1e-2))
 fhsig50(x) = max(50 * hardsigmoid(x), oftype(x, 1e-2))
-fhsigT2s(x) = max(oftype(x, 30e-6) * hardsigmoid(x), oftype(x, 1e-6))
+fhsigT2s_wide(x) = max(oftype(x, 30e-6) * hardsigmoid(x), oftype(x, 1e-6))
 hsw0(x) = hardsigmoid(x) #for w0
 hsB1(x) = oftype(x, 0.6) * hardsigmoid(x) + oftype(x, 0.6) # for B1
 
 # Bounds on parameter outputs
-BoundedOut(N) = Split(Dense(N,1,fhsig), Dense(N,1,fhsig2), Dense(N,1,fhsig25), Dense(N,1,fhsig50), Dense(N,1,fhsig10), Dense(N,1,fhsigT2s), Dense(N,1,hsw0), Dense(N,1,hsB1)) #m0s, R1f, R2f, Rx, R1s, T2s, w0, B1
+BoundedOut(N) = Split(Dense(N,1,fhsig), Dense(N,1,fhsig2), Dense(N,1,fhsig25), Dense(N,1,fhsig50), Dense(N,1,fhsig10), Dense(N,1,fhsigT2s_wide), Dense(N,1,hsw0), Dense(N,1,hsB1)) #m0s, R1f, R2f, Rx, R1s, T2s, w0, B1
 
 #helper functions
 function build_model(Nc::Int=30)

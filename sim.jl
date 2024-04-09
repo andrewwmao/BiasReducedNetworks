@@ -1,6 +1,7 @@
 using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
+
 using LinearAlgebra
 using MAT
 using Random
@@ -8,7 +9,8 @@ using MRIgeneralizedBloch
 using ProgressBars
 
 ## parameters
-Nfp = 2^11 #2048
+# Nfp = 2^11 #2048
+Nfp = 2^4 # for testing pipeline
 TR = 3.5e-3
 
 T2smin = 5e-6
