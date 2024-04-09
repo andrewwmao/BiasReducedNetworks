@@ -12,7 +12,7 @@ gr(display_type=:inline)
 theme(:default)
 cur_colors = theme_palette(:auto);
 
-# load control
+## load flip angle pattern
 TR = 3.5e-3
 control = matread("control.mat")
 α = [reshape(control["alpha"],:,6)[:,i] for i = 1:size(reshape(control["alpha"],:,6),2)]
@@ -23,8 +23,8 @@ R2slT = precompute_R2sl()
 Ncoef = 15
 U = matread("basis.mat")["U"][:, 1:Ncoef]
 
-model_biased = BSON.load("$NN_path/v10p9X2-7joint_fatCSF_CRBopt_biaspen_Nc15_11L_Np6_epochs500_bs51200_lr1e-04_dr0e+00_bl0_Nr1_RADAM_coeff1_Ns15_SNR10-50.bson")[:model] #original submission
-model_unbiased = BSON.load("$NN_path/v10p9X2-7joint_fatCSF_CRBopt_varcon_Nc15_11L_Np6_epochs500_bs256_lr1e-04_dr0e+00_λ1_δ1.0_Nr200_RADAM_coeff1_Ns15.bson")[:model]
+model_biased = BSON.load("msecrb_network.bson")[:model]
+model_unbiased = BSON.load("biasreduced_network.bson")[:model]
 
 ## simulation parameters
 m0s = 0.2
@@ -69,8 +69,8 @@ for ip ∈ eachindex(p)
     x .+= σ .* (randn(size(x)) .+ 1im * randn(size(x)))
     x = ComplexF32.(transpose(U' * x))
 
-    m0s_vals[1,:,ip], R1f_vals[1,:,ip], R2f_vals[1,:,ip], Rex_vals[1,:,ip], R1s_vals[1,:,ip], T2s_vals[1,:,ip] = fit_invivo2(model_biased, x, trues(size(x,1)))
-    m0s_vals[2,:,ip], R1f_vals[2,:,ip], R2f_vals[2,:,ip], Rex_vals[2,:,ip], R1s_vals[2,:,ip], T2s_vals[2,:,ip] = fit_invivo2(model_unbiased, x, trues(size(x,1)))
+    m0s_vals[1,:,ip], R1f_vals[1,:,ip], R2f_vals[1,:,ip], Rex_vals[1,:,ip], R1s_vals[1,:,ip], T2s_vals[1,:,ip] = fit_invivo(model_biased, x, trues(size(x,1)))
+    m0s_vals[2,:,ip], R1f_vals[2,:,ip], R2f_vals[2,:,ip], Rex_vals[2,:,ip], R1s_vals[2,:,ip], T2s_vals[2,:,ip] = fit_invivo(model_unbiased, x, trues(size(x,1)))
 
     pvals[1,ip] = pvalue(UnequalVarianceTTest(m0s_vals[1,:,ip], m0s_vals[2,:,ip]))
     pvals[2,ip] = pvalue(UnequalVarianceTTest(R1f_vals[1,:,ip], R1f_vals[2,:,ip]))
@@ -80,7 +80,7 @@ for ip ∈ eachindex(p)
     pvals[6,ip] = pvalue(UnequalVarianceTTest(T2s_vals[1,:,ip], T2s_vals[2,:,ip]))
 end
 
-# plot areas of significant bias reduction
+## plot areas of significant bias reduction
 pvals_plot = (pvals .<= 0.05 / length(pvals))
 pvals_plot[1,:] .= pvals_plot[1,:] .&& vec(diff(abs.(mean(m0s_vals, dims=2) .- m0s), dims=1) .< 0)
 pvals_plot[2,:] .= pvals_plot[2,:] .&& vec(diff(abs.(mean(R1f_vals, dims=2) .- R1f), dims=1) .< 0)
@@ -91,25 +91,25 @@ pvals_plot[6,:] .= pvals_plot[6,:] .&& vec(diff(abs.(mean(T2s_vals, dims=2) .- T
 pvals_plot = pvals_plot[[1,2,4,5,6],:]
 
 plot(heatmap(5:2:20, 1:5, pvals_plot), yflip=true, colorbar=false, tick_direction=:out,
-	yticks=(1:5, [L"m_0^s" L"R_1^f" L"R_\mathrm{x}" L"R_1^s" L"T_2^s"]), xlabel=L"R_2^f~~(1/s)", xticks=xticks,
+	yticks=(1:5, [L"m_0^s" L"R_1^f" L"R_\mathrm{x}" L"R_1^s" L"T_2^s"]), xlabel=L"R_2^f~~(1/s)", xticks=p,
 	ytickfontsize=20, xtickfontsize=12, xguidefontsize=20, size=(500,500), dpi=300)
 
 ## boxplots
 eval(:($ps = p))
-xticks = [5,7,11,15,19]
-pm0s  = plot(p[[1,end]], [m0s[1], m0s[end]],        xlabel = "",      xticks=(xticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(0.11,0.27), yticks =0.11:0.04:0.27, ylabel = L"m_0^s", legend=:none);
-pm0s2 = plot(p[[1,end]], [m0s[1], m0s[end]],        xlabel = "",      xticks=(xticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(0.11,0.27), yticks=(0.11:0.04:0.27, ""), legend=:none);
-pR1f  = plot(p[[1,end]], [R1f[1], R1f[end]],        xlabel = "",      xticks=(xticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(0.25,0.7), yticks= 0.25:0.15:0.7, ylabel = L"R_1^f~~(1/s)", legend=:none);
-pR1f2 = plot(p[[1,end]], [R1f[1], R1f[end]],        xlabel = "",      xticks=(xticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(0.25,0.7), yticks=(0.25:0.15:0.7, ""), legend=:none);
-pR2f  = plot(p[[1,end]], [R2f[1], R2f[end]],        xlabel = "",      xticks=(xticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(4,22.5), yticks= [5,7,11,15,19], ylabel = L"R_2^f~~(1/s)", legend=:none, aspect_ratio=1);
-pR2f2 = plot(p[[1,end]], [R2f[1], R2f[end]],        xlabel = "",      xticks=(xticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(4,22.5), yticks=([5,7,11,15,19], ""), legend=:none);
-pRex  = plot(p[[1,end]], [Rex[1], Rex[end]],        xlabel = pstring, xticks=xticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(6,30), yticks =6:4:30, ylabel = L"R_x~~(1/s)", legend=:none);
-pRex2 = plot(p[[1,end]], [Rex[1], Rex[end]],        xlabel = pstring, xticks=xticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(6,30), yticks=(6:4:30, ""), legend=:none);
-pR1s = plot(p[[1,end]], [R1s[1], R1s[end]],         xlabel = pstring, xticks=xticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(1.3,5.7), yticks =1:1:6, ylabel = L"R_1^s~~(1/s)", legend=:none);
-pR1s2 = plot(p[[1,end]], [R1s[1], R1s[end]],        xlabel = pstring, xticks=xticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(1.3,5.7), yticks=(1:1:6, ""), legend=:none);
-pT2s  = plot(p[[1,end]], [T2s[1], T2s[end]] .* 1e6, xlabel = pstring, xticks=xticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(4,22), yticks=5:5:20, ylabel = L"T_2^s~~(μs)", legend=:none);
-pT2s2 = plot(p[[1,end]], [T2s[1], T2s[end]] .* 1e6, xlabel = pstring, xticks=xticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(4,22), yticks=(5:5:20, ""), legend=:none);
-
+x_ticks = [5,7,11,15,19]
+pm0s  = plot(p[[1,end]], [m0s[1], m0s[end]],        xlabel = "",      xticks=(x_ticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(0.11,0.27), yticks =0.11:0.04:0.27, ylabel = L"m_0^s", legend=:none);
+pm0s2 = plot(p[[1,end]], [m0s[1], m0s[end]],        xlabel = "",      xticks=(x_ticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(0.11,0.27), yticks=(0.11:0.04:0.27, ""), legend=:none);
+pR1f  = plot(p[[1,end]], [R1f[1], R1f[end]],        xlabel = "",      xticks=(x_ticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(0.25,0.7), yticks= 0.25:0.15:0.7, ylabel = L"R_1^f~~(1/s)", legend=:none);
+pR1f2 = plot(p[[1,end]], [R1f[1], R1f[end]],        xlabel = "",      xticks=(x_ticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(0.25,0.7), yticks=(0.25:0.15:0.7, ""), legend=:none);
+pR2f  = plot(p[[1,end]], [R2f[1], R2f[end]],        xlabel = "",      xticks=(x_ticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(4,22.5), yticks= [5,7,11,15,19], ylabel = L"R_2^f~~(1/s)", legend=:none, aspect_ratio=1);
+pR2f2 = plot(p[[1,end]], [R2f[1], R2f[end]],        xlabel = "",      xticks=(x_ticks, ""), seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(4,22.5), yticks=([5,7,11,15,19], ""), legend=:none);
+pRex  = plot(p[[1,end]], [Rex[1], Rex[end]],        xlabel = pstring, xticks= x_ticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(6,30), yticks =6:4:30, ylabel = L"R_x~~(1/s)", legend=:none);
+pRex2 = plot(p[[1,end]], [Rex[1], Rex[end]],        xlabel = pstring, xticks= x_ticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(6,30), yticks=(6:4:30, ""), legend=:none);
+pR1s = plot(p[[1,end]], [R1s[1], R1s[end]],         xlabel = pstring, xticks= x_ticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(1.3,5.7), yticks =1:1:6, ylabel = L"R_1^s~~(1/s)", legend=:none);
+pR1s2 = plot(p[[1,end]], [R1s[1], R1s[end]],        xlabel = pstring, xticks= x_ticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(1.3,5.7), yticks=(1:1:6, ""), legend=:none);
+pT2s  = plot(p[[1,end]], [T2s[1], T2s[end]] .* 1e6, xlabel = pstring, xticks= x_ticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(4,22), yticks=5:5:20, ylabel = L"T_2^s~~(μs)", legend=:none);
+pT2s2 = plot(p[[1,end]], [T2s[1], T2s[end]] .* 1e6, xlabel = pstring, xticks= x_ticks,       seriescolor=cur_colors[2], xlim=(4,22.5), ylim=(4,22), yticks=(5:5:20, ""), legend=:none);
+ 
 for ip ∈ eachindex(p)
     eval(:($ps = p[$ip]))
 
