@@ -14,17 +14,17 @@ cur_colors = theme_palette(:auto);
 
 ## load flip angle pattern
 TR = 3.5e-3
-control = matread("control.mat")
+control = matread("data/control.mat")
 α = [reshape(control["alpha"],:,6)[:,i] for i = 1:size(reshape(control["alpha"],:,6),2)]
 TRF = [reshape(control["TRF"],:,6)[:,i] for i = 1:size(reshape(control["TRF"],:,6),2)]
 R2slT = precompute_R2sl()
 
 ## load basis and NNs
 Ncoef = 15
-U = matread("basis.mat")["U"][:, 1:Ncoef]
+U = matread("data/basis.mat")["U"][:, 1:Ncoef]
 
-model_biased = BSON.load("msecrb_network.bson")[:model]
-model_unbiased = BSON.load("biasreduced_network.bson")[:model]
+model_biased = BSON.load("data/msecrb_network.bson")[:model]
+model_unbiased = BSON.load("data/biasreduced_network.bson")[:model]
 
 ## simulation parameters
 m0s = 0.2

@@ -12,7 +12,7 @@ TR = 3.5e-3
 Ncoef = 15
 
 ## merge fingerprints into td.mat using a precomputed basis
-U = matread("basis.mat")["U"][:,1:Ncoef]
+U = matread("data/basis.mat")["U"][:,1:Ncoef]
 Nfiles = length(files)
 (Np, Nbatch) = size(matread("fingerprints/ijob$(files[1]).mat")["p"])
 sc   = zeros(ComplexF32, R, Nbatch, Nfiles) # compressed fingerprints
@@ -58,8 +58,7 @@ if length(idx_nonzero) < size(sc,2)
 end
 
 ## Save training dataset
-# file = matopen("td.mat", "w");
-file = matopen("td_test.mat", "w"); # for testing pipeline
+file = matopen("data/td.mat", "w");
 write(file, "sc", sc);
 write(file, "p", p);
 write(file, "CRB", CRBc);

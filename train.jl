@@ -261,13 +261,11 @@ Nr = parsed_args["num_realizations"]
 δ = parsed_args["delta"]
 
 # define the training dataset
-# td_file = "td.mat"
-td_file = "td_test.mat" # for testing the pipeline
+td_file = "data/td.mat"
 if loss == "msecrb"
     pretrained_filename = ""
 elseif loss == "varcon"
-    # pretrained_filename = "msecrb_Nc$(Nc)_Np$(Np)_epochs500_bs2048_lr1e-04_dr5e-05.bson"
-    pretrained_filename = "msecrb_Nc$(Nc)_Np$(Np)_epochs500_bs120_lr1e-04_dr5e-05.bson" # for testing pipeline
+    pretrained_filename = "data/msecrb_Nc$(Nc)_Np$(Np)_epochs500_bs2048_lr1e-04_dr5e-05.bson"
 end
 
 # start training
@@ -278,9 +276,8 @@ model, epoch_loss = train(td_file; epochs=epochs, Nc=Nc, Np=Np, η=η, γ=γ, ba
 
 # save model and epoch loss
 if loss == "varcon"
-    # model_filename = "biasreduced_network.bson"
-    model_filename = "network_test.bson" # for testing the pipeline
+    model_filename = "data/biasreduced_network.bson"
 elseif loss == "msecrb"
-    model_filename = string(loss, @sprintf("_Nc%g_Np%g_epochs%g_bs%g_lr%.0e_dr%.0e.bson", Nc, Np, epochs, batchsize, η, γ))
+    model_filename = string("data/", loss, @sprintf("_Nc%g_Np%g_epochs%g_bs%g_lr%.0e_dr%.0e.bson", Nc, Np, epochs, batchsize, η, γ))
 end
 BSON.@save model_filename model epoch_loss

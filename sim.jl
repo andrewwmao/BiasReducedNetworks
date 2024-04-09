@@ -9,8 +9,7 @@ using MRIgeneralizedBloch
 using ProgressBars
 
 ## parameters
-# Nfp = 2^11 #2048
-Nfp = 2^4 # for testing pipeline
+Nfp = 2^11 #2048
 TR = 3.5e-3
 
 T2smin = 5e-6
@@ -20,7 +19,7 @@ B1max = 1.3
 TRF_max = 500e-6
 
 ## Load flip angle pattern
-control = matread("control.mat")
+control = matread("data/control.mat")
 α = [reshape(control["alpha"],:,6)[:,i] for i = 1:size(reshape(control["alpha"],:,6),2)]
 TRF = [reshape(control["TRF"],:,6)[:,i] for i = 1:size(reshape(control["TRF"],:,6),2)]
 
