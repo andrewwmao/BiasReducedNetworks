@@ -6,7 +6,7 @@ using LinearAlgebra
 using MAT
 
 ## User-Defined Parameters
-files = 1:40
+files = 1:90
 TR = 3.5e-3
 R = 15
 
@@ -57,7 +57,8 @@ if length(idx_nonzero) < size(sc,2)
 end
 
 ## Save training dataset
-file = matopen("td.mat", "w");
+# file = matopen("td.mat", "w");
+file = matopen("td_test.mat", "w"); # for testing pipeline
 write(file, "sc", sc);
 write(file, "p", p);
 write(file, "CRB", CRBc);

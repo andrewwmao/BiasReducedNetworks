@@ -269,7 +269,8 @@ Nr = parsed_args["num_realizations"]
 δ = parsed_args["delta"]
 
 # define the training dataset
-td_file = "td.mat"
+# td_file = "td.mat"
+td_file = "td_test.mat" # for testing the pipeline
 if loss == "msecrb"
     pretrained_filename = ""
 elseif loss == "varcon"
@@ -284,7 +285,8 @@ model, epoch_loss = train(td_file; epochs=epochs, Nc=Nc, Np=Np, η=η, γ=γ, ba
 
 # save model and epoch loss
 if loss == "varcon"
-    model_filename = "../biasreduced_network.bson"
+    # model_filename = "biasreduced_network.bson"
+    model_filename = "network_test.bson" # for testing the pipeline
 elseif loss == "msecrb"
     model_filename = string(loss, @sprintf("_Nc%g_%gL_Np%g_epochs%g_bs%g_lr%.0e_dr%.0e_", Nc, Nl, Np, epochs, batchsize, η, γ),
         opt, "_", normalize, @sprintf("_Ns%g", Ns), ".bson")

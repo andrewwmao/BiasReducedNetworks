@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -p a100_short,a100_long
+#SBATCH --partition a100_short,a100_long
 #SBATCH -t 03-00:00:00
 #SBATCH --mem=40G
 #SBATCH --nodes=1
