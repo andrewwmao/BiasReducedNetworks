@@ -16,15 +16,14 @@ T2smax = 25e-6
 B1min = 0.6
 B1max = 1.3
 TRF_max = 500e-6
-idx_grad = [2,3,4,5,6,7] # which gradients should be orthogonalized
 
-## load control, basis files
-control = matread("3T_v10p9_pattern.mat")
+## Load flip angle pattern
+control = matread("control.mat")
 α = [reshape(control["alpha"],:,6)[:,i] for i = 1:size(reshape(control["alpha"],:,6),2)]
 TRF = [reshape(control["TRF"],:,6)[:,i] for i = 1:size(reshape(control["TRF"],:,6),2)]
 
 R2slT = precompute_R2sl(T2s_min=T2smin, T2s_max=T2smax, B1_max=B1max,TRF_max=TRF_max)
-grad_list = [grad_m0s(), grad_R1f(), grad_R2f(), grad_Rx(), grad_R1s(), grad_T2s(), grad_ω0(), grad_B1()]
+grad_list = [grad_m0s(), grad_R1f(), grad_R2f(), grad_Rx(), grad_R1s(), grad_T2s(), grad_ω0(), grad_B1()] # signal derivatives to compute, needed to calculate CRB
 
 ijob = try
     parse(Int32, ENV["SLURM_ARRAY_TASK_ID"])
@@ -34,7 +33,7 @@ end
 rng = MersenneTwister(ijob);
 println("ijob = $ijob")
 
-##
+## Helper Functions
 function set_rand_parameters(rng, T2smin, T2smax, B1min, B1max) # brain parenchyma
     m0s = Inf
     while (m0s < 0 || m0s > 0.35)
@@ -128,20 +127,19 @@ end
 
 function calc_training_data(Nfp, α, TRF, TR, grad_list, R2slT, rng, T2smin, T2smax, B1min, B1max, ijob)
     s = zeros(ComplexF32, length(α[1]), length(α), length(grad_list)+1, Nfp)
-    p = zeros(length(grad_list), Nfp) #8 parameters in split R1 model excluding M0
+    p = zeros(length(grad_list), Nfp) #8 parameters excluding M0
     iter = ProgressBar(1:Nfp)
     flush(stderr)
     for i in iter
-        if ijob > 300
+        if ijob > 81
             (m0s, R1f, R2f, Rx, R1s, T2s, ω0, B1) = set_rand_params_fat(rng, B1min, B1max)
-        elseif ijob > 200
+        elseif ijob > 72
             (m0s, R1f, R2f, Rx, R1s, T2s, ω0, B1) = set_rand_params_CSF(rng, B1min, B1max)
         else
             (m0s, R1f, R2f, Rx, R1s, T2s, ω0, B1) = set_rand_parameters(rng, T2smin, T2smax, B1min, B1max)
         end
         p[:,i] = [m0s, R1f, R2f, Rx, R1s, T2s, ω0, B1]
-        #simulate using every control and concatenate
-        for j ∈ axes(α,1)
+        for j ∈ axes(α,1) #simulate using every control and concatenate
             si = calculatesignal_linearapprox(α[j], TRF[j], TR, ω0, B1, m0s, R1f, R2f, Rx, R1s, T2s, R2slT; grad_list=grad_list)
             s[:,j,:,i] .= reshape(si, (length(α[j]), length(grad_list)+1))
         end
@@ -151,11 +149,12 @@ function calc_training_data(Nfp, α, TRF, TR, grad_list, R2slT, rng, T2smin, T2s
     return (s,p)
 end
 
-## training data
+## Calculate Training Data
 @info "Simulating fingerprints"
 flush(stderr)
 @time s, p = calc_training_data(Nfp, α, TRF, TR, grad_list, R2slT, rng, T2smin, T2smax, B1min, B1max, ijob)
 
+## Save
 file = matopen("fingerprints/ijob$(ijob).mat", "w")
 write(file, "s", s)
 write(file, "p", p)
