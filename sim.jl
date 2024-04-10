@@ -1,3 +1,6 @@
+## Note: This script is inherently intended to be run multiple times
+## Sim.sh runs this script as an array, where each instance gets an environment variable called SLURM_ARRAY_TASK_ID
+
 using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
