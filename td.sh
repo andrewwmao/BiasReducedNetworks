@@ -15,6 +15,6 @@ set -Eeo pipefail
 echo $HOSTNAME
 $JULIA_BIN --heap-size-hint=${SLURM_MEM_PER_NODE}M td.jl
 
-# rm -f fingerprints/*.mat
+rm -f fingerprints/*.mat
 
 wait
