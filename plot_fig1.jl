@@ -81,7 +81,7 @@ for ip ∈ eachindex(p)
 end
 
 ## plot areas of significant bias reduction
-pvals_plot = (pvals .<= 0.05 / length(pvals))
+pvals_plot = (pvals .<= 0.05 / length(pvals)) # Bonferroni correction
 pvals_plot[1,:] .= pvals_plot[1,:] .&& vec(diff(abs.(mean(m0s_vals, dims=2) .- m0s), dims=1) .< 0)
 pvals_plot[2,:] .= pvals_plot[2,:] .&& vec(diff(abs.(mean(R1f_vals, dims=2) .- R1f), dims=1) .< 0)
 pvals_plot[3,:] .= pvals_plot[3,:] .&& vec(diff(abs.(mean(R2f_vals, dims=2) .- R2f), dims=1) .< 0)

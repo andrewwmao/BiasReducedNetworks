@@ -31,4 +31,5 @@ plot(
     heatmap(Rex_unbiased, c=:gist_earth, clim=(8,25),       aspect_ratio=1, colorbar=false),
     heatmap(R1s_unbiased, c=:gist_earth, clim=(1,5),        aspect_ratio=1, colorbar=false),
     heatmap(T2s_unbiased, c=:gist_earth, clim=(8e-6,20e-6), aspect_ratio=1, colorbar=false),
-    layout=(2,6), size=(1400,500), axis=([], false), dpi=300)
+    layout=(2,6), size=(1400,500), axis=([], false), dpi=300
+)
